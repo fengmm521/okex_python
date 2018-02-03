@@ -128,12 +128,25 @@ class TradeTool(object):
     #1:开多   2:开空   3:平多   4:平空
     def openShort(self):
 
+
+
         if self.isOpen:
             instr = raw_input('已开发仓是否继续开%d个空仓:y/n'%(self.amount))
             print instr
             if instr != 'y':
                 print '已开仓，选择本次不开仓'
                 return
+
+        outstr = '输入要下单的深度成交价编号\n>=1时,价格为深度编号\n0:价格为略高于买一价\n-1:'
+        print outstr
+        inputstr = raw_input("请输入：");
+        print inputstr
+        try:
+            inputidx = int(inputstr)
+        except Exception as e:
+            inputidx = None
+        print inputidx,type(inputidx)
+
         print ('期货开空单')
         # symbol String 是 btc_usd   ltc_usd    eth_usd    etc_usd    bch_usd
         # contract_type String 是 合约类型: this_week:当周   next_week:下周   quarter:季度
@@ -145,22 +158,16 @@ class TradeTool(object):
         # match_price String 否 是否为对手价 0:不是    1:是   ,当取值为1时,price无效
         # lever_rate String 否
         # 杠杆倍数 value:10\20 默认10
-        self.depthBuys,self.depthSells = self.getDepth()
-        tmps = self.depthBuys[::-1]
-        count = len(tmps)
-        for p in tmps:
-            print count,'\t',p[0],'\t',p[1]
-            count -= 1
-        print -1,'\t',self.depthSells[-1][0],'\t',self.depthSells[-1][1]
-        outstr = '输入要下单的深度成交价编号\n>=1时,价格为深度编号\n0:价格为略高于买一价\n-1:'
-        inputstr = raw_input("请输入：");
-        print inputstr
-        try:
-            inputidx = int(inputstr)
-        except Exception as e:
-            inputidx = None
-        print inputidx,type(inputidx)
         if inputidx != None:
+
+            self.depthBuys,self.depthSells = self.getDepth()
+            tmps = self.depthBuys[::-1]
+            count = len(tmps)
+            for p in tmps:
+                print count,'\t',p[0],'\t',p[1]
+                count -= 1
+            print -1,'\t',self.depthSells[-1][0],'\t',self.depthSells[-1][1]
+
             self.isOpen = True
             if inputidx == 0:
                 v = self.depthBuys[0]
@@ -195,26 +202,30 @@ class TradeTool(object):
         # match_price String 否 是否为对手价 0:不是    1:是   ,当取值为1时,price无效
         # lever_rate String 否
         # 杠杆倍数 value:10\20 默认10
-        print ('期货平空单')
-        self.depthBuys,self.depthSells = self.getDepth()
-        atmp = list(self.depthSells)
-        self.depthSells = self.depthBuys
-        self.depthBuys = atmp
-        tmps = self.depthBuys
-        count = len(tmps)
-        for p in tmps:
-            print count,'\t',p[0],'\t',p[1]
-            count -= 1
-        print -1,'\t',self.depthSells[-1][0],'\t',self.depthSells[-1][1]
+
         outstr = '输入要下单的深度成交价编号\n>=1时,价格为深度编号\n0:价格为略高于买一价\n-1:'
+        print outstr
         inputstr = raw_input("请输入：");
         print inputstr
         try:
             inputidx = int(inputstr)
         except Exception as e:
             inputidx = None
+
+        print ('期货平空单')
         
         if inputidx != None:
+            self.depthBuys,self.depthSells = self.getDepth()
+            atmp = list(self.depthSells)
+            self.depthSells = self.depthBuys
+            self.depthBuys = atmp
+            tmps = self.depthBuys
+            count = len(tmps)
+            for p in tmps:
+                print count,'\t',p[0],'\t',p[1]
+                count -= 1
+            print -1,'\t',self.depthSells[0][0],'\t',self.depthSells[0][1]
+
             self.isOpen = False
             if inputidx == 0:
                 v = self.depthBuys[-1] 
@@ -223,7 +234,7 @@ class TradeTool(object):
                 if not self.isTest:
                     print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'4','0','10')
             elif inputidx < 0:
-                v = self.depthSells[-1] 
+                v = self.depthSells[0] 
                 tmpprice = v[0] + 0.001
                 print '平空使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
                 if not self.isTest:
@@ -245,25 +256,31 @@ class TradeTool(object):
             if instr != 'y':
                 print '已开仓，选择本次不开仓'
                 return
-        print ('期货开多单')
-        self.depthBuys,self.depthSells = self.getDepth()
-        atmp = list(self.depthSells)
-        self.depthSells = self.depthBuys
-        self.depthBuys = atmp
-        tmps = self.depthBuys
-        count = len(tmps)
-        for p in tmps:
-            print count,'\t',p[0],'\t',p[1]
-            count -= 1
-        print -1,'\t',self.depthSells[-1][0],'\t',self.depthSells[-1][1]
         outstr = '输入要下单的深度成交价编号\n>=1时,价格为深度编号\n0:价格为略高于买一价\n-1:'
+        print outstr
         inputstr = raw_input("请输入：");
         print inputstr
         try:
             inputidx = int(inputstr)
         except Exception as e:
             inputidx = None
+
+        print ('期货开多单')
+        
+        
         if inputidx != None:
+
+            self.depthBuys,self.depthSells = self.getDepth()
+            atmp = self.depthSells
+            self.depthSells = self.depthBuys
+            self.depthBuys = atmp
+            tmps = self.depthBuys
+            count = len(tmps)
+            for p in tmps:
+                print count,'\t',p[0],'\t',p[1]
+                count -= 1
+            print -1,'\t',self.depthSells[0][0],'\t',self.depthSells[0][1]
+
             self.isOpen = True
             if inputidx == 0:
                 v = self.depthBuys[-1] 
@@ -272,7 +289,7 @@ class TradeTool(object):
                 if not self.isTest:
                     print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'1','0','10')
             elif inputidx < 0:
-                v = self.depthSells[-1] 
+                v = self.depthSells[0] 
                 tmpprice = v[0] + 0.001
                 print '开多使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
                 if not self.isTest:
@@ -289,6 +306,16 @@ class TradeTool(object):
         
 
     def closeLong(self):
+
+        outstr = '输入要下单的深度成交价编号\n>=1时,价格为深度编号\n0:价格为略高于买一价\n-1:'
+        print outstr
+        inputstr = raw_input("请输入：");
+        print inputstr
+        try:
+            inputidx = int(inputstr)
+        except Exception as e:
+            inputidx = None
+
         print ('期货平多单')
         # symbol String 是 btc_usd   ltc_usd    eth_usd    etc_usd    bch_usd
         # contract_type String 是 合约类型: this_week:当周   next_week:下周   quarter:季度
@@ -300,23 +327,20 @@ class TradeTool(object):
         # match_price String 否 是否为对手价 0:不是    1:是   ,当取值为1时,price无效
         # lever_rate String 否
         # 杠杆倍数 value:10\20 默认10
-        self.depthBuys,self.depthSells = self.getDepth()
-        tmps = self.depthBuys[::-1]
-        count = len(tmps)
-        for p in tmps:
-            print count,'\t',p[0],'\t',p[1]
-            count -= 1
-
-        print -1,'\t',self.depthSells[-1][0],'\t',self.depthSells[-1][1]
-        outstr = '输入要下单的深度成交价编号\n>=1时,价格为深度编号\n0:价格为略高于买一价\n-1:'
-        inputstr = raw_input("请输入：");
-        print inputstr
-        try:
-            inputidx = int(inputstr)
-        except Exception as e:
-            inputidx = None
+        
+        
         # tmps = tmps[::-1]
         if inputidx != None:
+
+            self.depthBuys,self.depthSells = self.getDepth()
+            tmps = self.depthBuys[::-1]
+            count = len(tmps)
+            for p in tmps:
+                print count,'\t',p[0],'\t',p[1]
+                count -= 1
+
+            print -1,'\t',self.depthSells[-1][0],'\t',self.depthSells[-1][1]
+
             self.isOpen = False
             if inputidx == 0:
                 v = self.depthBuys[0]
@@ -349,6 +373,7 @@ class TradeTool(object):
                 strids = ','.join(self.IDs)
             print self.okcoinFuture.future_cancel('ltc_usd','quarter',strids)
             print '所有定单已取消'
+        self.isOpen = False
 
 # print ('期货下单')
 # print (okcoinFuture.future_trade('ltc_usd','quarter','147.205','30','1','0','10'))
