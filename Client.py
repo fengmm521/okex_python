@@ -414,6 +414,11 @@ def main(pAmount = 30, ispTest = True):
             tradetool.closeLong()
         elif inputstr == 'set':
             intmp = raw_input("输入每次开单量:");
+            try:
+                intam = int(intmp)
+                tradetool.amount = intam
+            except Exception as e:
+                print '输入参数错误'
         elif inputstr == 'q':
             print '程序退出成功'
             break
