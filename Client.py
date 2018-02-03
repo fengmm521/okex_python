@@ -131,7 +131,7 @@ class TradeTool(object):
 
 
         if self.isOpen:
-            instr = raw_input('已开发仓是否继续开%d个空仓:y/n'%(self.amount))
+            instr = raw_input('已开发仓是否继续开%d个空仓(y/n):'%(self.amount))
             print instr
             if instr != 'y':
                 print '已开仓，选择本次不开仓'
@@ -251,7 +251,7 @@ class TradeTool(object):
 
     def openLong(self):
         if self.isOpen:
-            instr = raw_input('已开发仓是否继续开%d个空仓:y/n'%(self.amount))
+            instr = raw_input('已开发仓是否继续开%d个空仓(y/n):'%(self.amount))
             print instr
             if instr != 'y':
                 print '已开仓，选择本次不开仓'
