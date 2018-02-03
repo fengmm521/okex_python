@@ -96,9 +96,14 @@ class TradeTool(object):
         self.amount = amount
         self.isTest = isTest
         self.IDs = []
+        self.isOpen = False
 
     def setAmount(self,amount):
         self.amount = amount
+
+    def printSet(self):
+        print 'isTest:',self.isTest
+        print 'amount:',self.amount
 
     def getDepth(self):
         turl = 'https://www.okex.com/api/v1/future_depth.do?symbol=ltc_usd&contract_type=quarter&size=20'
@@ -122,6 +127,13 @@ class TradeTool(object):
 
     #1:开多   2:开空   3:平多   4:平空
     def openShort(self):
+
+        if self.isOpen:
+            instr = raw_input('已开发仓是否继续开%d个空仓:y/n'%(self.amount))
+            print instr
+            if instr != 'y':
+                print '已开仓，选择本次不开仓'
+                return
         print ('期货开空单')
         # symbol String 是 btc_usd   ltc_usd    eth_usd    etc_usd    bch_usd
         # contract_type String 是 合约类型: this_week:当周   next_week:下周   quarter:季度
@@ -149,6 +161,7 @@ class TradeTool(object):
             inputidx = None
         print inputidx,type(inputidx)
         if inputidx != None:
+            self.isOpen = True
             if inputidx == 0:
                 v = self.depthBuys[0]
                 tmpprice = v[0] + 0.001
@@ -202,6 +215,7 @@ class TradeTool(object):
             inputidx = None
         
         if inputidx != None:
+            self.isOpen = False
             if inputidx == 0:
                 v = self.depthBuys[-1] 
                 tmpprice = v[0] - 0.001
@@ -225,6 +239,12 @@ class TradeTool(object):
             print '输入数据错误'
 
     def openLong(self):
+        if self.isOpen:
+            instr = raw_input('已开发仓是否继续开%d个空仓:y/n'%(self.amount))
+            print instr
+            if instr != 'y':
+                print '已开仓，选择本次不开仓'
+                return
         print ('期货开多单')
         self.depthBuys,self.depthSells = self.getDepth()
         atmp = list(self.depthSells)
@@ -244,6 +264,7 @@ class TradeTool(object):
         except Exception as e:
             inputidx = None
         if inputidx != None:
+            self.isOpen = True
             if inputidx == 0:
                 v = self.depthBuys[-1] 
                 tmpprice = v[0] - 0.001
@@ -296,6 +317,7 @@ class TradeTool(object):
             inputidx = None
         # tmps = tmps[::-1]
         if inputidx != None:
+            self.isOpen = False
             if inputidx == 0:
                 v = self.depthBuys[0]
                 tmpprice = v[0] + 0.001
@@ -354,7 +376,7 @@ class TradeTool(object):
 
 def main(pAmount = 30, ispTest = True):
      tradetool = TradeTool(amount = pAmount,isTest = ispTest)
-     pstr = '程序重新运行,\nos:开空\ncs:平空\nol:开多\ncl:平多\nset:设置每次成交量\nc:取消所有未成交定单\ntest:\n\t输入1表示使用测试方式运行\n\t0表示正试运行下单\nq:退出\n请输入:'
+     pstr = '程序重新运行,\nos:开空\ncs:平空\nol:开多\ncl:平多\np:输出设置项\nset:设置每次成交量\nc:取消所有未成交定单\ntest:\n\t输入1表示使用测试方式运行\n\t0表示正试运行下单\nq:退出\n请输入:'
      while True:
         inputstr = raw_input(pstr);
         if inputstr == 'os':
@@ -372,6 +394,8 @@ def main(pAmount = 30, ispTest = True):
             break
         elif inputstr == 'c':
             tradetool.cleanAllTrade()
+        elif inputstr == 'p':
+            tradetool.printSet()
         elif inputstr == 'test':
             outstr = '输入是否开启测试\n1.开启测试下单不会真正发送\n0.关闭测试模试,下单将会发送到平台\n请输入:'
             tstr = raw_input(outstr);
