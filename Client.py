@@ -8,6 +8,7 @@ from OkcoinFutureAPI import OKCoinFuture
 from magetool import urltool
 import json
 import sys
+import time
 
 f = open('../../btc/okexapikey/okexapikey.txt','r')
 tmpstr = f.read()
@@ -94,6 +95,7 @@ class TradeTool(object):
         self.depthBuys = []
         self.amount = amount
         self.isTest = isTest
+        self.IDs = []
 
     def setAmount(self,amount):
         self.amount = amount
@@ -105,6 +107,19 @@ class TradeTool(object):
         buys = ddic['bids']
         sells = ddic['asks']
         return buys,sells
+
+    def getAllOrderIDs(self):
+        #future_orderinfo(self,symbol,contractType,orderId,status,currentPage,pageLength)
+        tmpjson = self.okcoinFuture.future_orderinfo('ltc_usd','quarter','-1','1','1','30')
+        dic = json.loads(tmpjson)
+        self.IDs = []
+        try:
+            for t in dic['orders']:
+                self.IDs.append(t['order_id'])
+        except Exception as e:
+            self.IDs = []
+        
+
     #1:开多   2:开空   3:平多   4:平空
     def openShort(self):
         print ('期货开空单')
@@ -155,6 +170,7 @@ class TradeTool(object):
                     print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'2','0','10')
         else:
             print '输入数据错误'
+
     def closeShort(self):
         # symbol String 是 btc_usd   ltc_usd    eth_usd    etc_usd    bch_usd
         # contract_type String 是 合约类型: this_week:当周   next_week:下周   quarter:季度
@@ -301,6 +317,17 @@ class TradeTool(object):
                     print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'3','0','10')
         else:
             print '输入数据错误'
+
+    def cleanAllTrade(self):
+        self.getAllOrderIDs()
+        time.sleep(0.1)
+        if self.IDs:
+            strids = self.IDs[0]
+            if len(self.IDs) > 1:
+                strids = ','.join(self.IDs)
+            print self.okcoinFuture.future_cancel('ltc_usd','quarter',strids)
+            print '所有定单已取消'
+
 # print ('期货下单')
 # print (okcoinFuture.future_trade('ltc_usd','quarter','147.205','30','1','0','10'))
 
@@ -327,7 +354,7 @@ class TradeTool(object):
 
 def main(pAmount = 30, ispTest = True):
      tradetool = TradeTool(amount = pAmount,isTest = ispTest)
-     pstr = 'os:开空\ncs:平空\nol:开多\ncl:平多\nset:设置每次成交量\ntest:\n\t输入1表示使用测试方式运行\n\t0表示正试运行下单\nq:退出\n请输入:'
+     pstr = '程序重新运行,\nos:开空\ncs:平空\nol:开多\ncl:平多\nset:设置每次成交量\nc:取消所有未成交定单\ntest:\n\t输入1表示使用测试方式运行\n\t0表示正试运行下单\nq:退出\n请输入:'
      while True:
         inputstr = raw_input(pstr);
         if inputstr == 'os':
@@ -343,6 +370,8 @@ def main(pAmount = 30, ispTest = True):
         elif inputstr == 'q':
             print '程序退出成功'
             break
+        elif inputstr == 'c':
+            tradetool.cleanAllTrade()
         elif inputstr == 'test':
             outstr = '输入是否开启测试\n1.开启测试下单不会真正发送\n0.关闭测试模试,下单将会发送到平台\n请输入:'
             tstr = raw_input(outstr);
