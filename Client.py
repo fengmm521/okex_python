@@ -5,8 +5,9 @@
 
 from OkcoinSpotAPI import OKCoinSpot
 from OkcoinFutureAPI import OKCoinFuture
-
+from magetool import urltool
 import json
+import sys
 
 f = open('../../btc/okexapikey/okexapikey.txt','r')
 tmpstr = f.read()
@@ -23,7 +24,7 @@ okcoinRESTURL = 'www.okex.com'#'www.okcoin.com'   #请求注意：国内账号�
 # okcoinSpot = OKCoinSpot(okcoinRESTURL,apikey,secretkey)
 
 #期货API
-okcoinFuture = OKCoinFuture(okcoinRESTURL,apikey,secretkey)
+# okcoinFuture = OKCoinFuture(okcoinRESTURL,apikey,secretkey)
 
 # print (u' 现货行情 ')
 # print (okcoinSpot.ticker('btc_usd'))
@@ -83,8 +84,211 @@ okcoinFuture = OKCoinFuture(okcoinRESTURL,apikey,secretkey)
 #print (u'获取全仓持仓信息')
 #print (okcoinFuture.future_position('ltc_usd','this_week'))
 
-#print (u'期货下单')
-#print (okcoinFuture.future_trade('ltc_usd','this_week','0.1','1','1','0','20'))
+
+
+class TradeTool(object):
+    """docstring for ClassName"""
+    def __init__(self,amount = 30,isTest = False):
+        self.okcoinFuture = OKCoinFuture(okcoinRESTURL,apikey,secretkey)
+        self.depthSells = []
+        self.depthBuys = []
+        self.amount = amount
+        self.isTest = isTest
+
+    def setAmount(self,amount):
+        self.amount = amount
+
+    def getDepth(self):
+        turl = 'https://www.okex.com/api/v1/future_depth.do?symbol=ltc_usd&contract_type=quarter&size=20'
+        data = urltool.getUrl(turl)
+        ddic = json.loads(data)
+        buys = ddic['bids']
+        sells = ddic['asks']
+        return buys,sells
+    #1:开多   2:开空   3:平多   4:平空
+    def openShort(self):
+        print ('期货开空单')
+        # symbol String 是 btc_usd   ltc_usd    eth_usd    etc_usd    bch_usd
+        # contract_type String 是 合约类型: this_week:当周   next_week:下周   quarter:季度
+        # api_key String 是 用户申请的apiKey 
+        # sign String 是 请求参数的签名
+        # price String 是 价格
+        # amount String 是 委托数量
+        # type String 是 1:开多   2:开空   3:平多   4:平空
+        # match_price String 否 是否为对手价 0:不是    1:是   ,当取值为1时,price无效
+        # lever_rate String 否
+        # 杠杆倍数 value:10\20 默认10
+        self.depthBuys,self.depthSells = self.getDepth()
+        tmps = self.depthBuys
+        count = len(tmps)
+        for p in tmps:
+            print count,'\t',p[0],'\t',p[1]
+            count -= 1
+        print -1,'\t',self.depthSells[-1][0],'\t',self.depthSells[-1][1]
+        outstr = '输入要下单的深度成交价编号\n>=1时,价格为深度编号\n0:价格为略高于买一价\n-1:'
+        inputstr = raw_input("请输入：");
+        print inputstr
+        inputidx = int(inputstr)
+        tmps = tmps[::-1]
+        print inputidx,type(inputidx)
+        if inputidx != None:
+            if inputidx == 0:
+                v = self.depthBuys[-1] 
+                tmpprice = v[0] + 0.001
+                print '开空使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
+                if not self.isTest:
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'2','0','10')
+            elif inputidx < 0:
+                v = self.depthSells[-1] 
+                tmpprice = v[0] - 0.001
+                print '开空使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
+                if not self.isTest:
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'2','0','10')
+            elif inputidx > 0:
+                v = tmps[inputidx - 1]
+                tmpprice = v[0]
+                print '开空使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
+                if not self.isTest:
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'2','0','10')
+        else:
+            print '输入数据错误'
+    def closeShort(self):
+        # symbol String 是 btc_usd   ltc_usd    eth_usd    etc_usd    bch_usd
+        # contract_type String 是 合约类型: this_week:当周   next_week:下周   quarter:季度
+        # api_key String 是 用户申请的apiKey 
+        # sign String 是 请求参数的签名
+        # price String 是 价格
+        # amount String 是 委托数量
+        # type String 是 1:开多   2:开空   3:平多   4:平空
+        # match_price String 否 是否为对手价 0:不是    1:是   ,当取值为1时,price无效
+        # lever_rate String 否
+        # 杠杆倍数 value:10\20 默认10
+        print ('期货平空单')
+        self.depthBuys,self.depthSells = self.getDepth()
+        atmp = list(self.depthSells)
+        self.depthSells = self.depthBuys
+        self.depthBuys = atmp
+        tmps = self.depthBuys
+        count = len(tmps)
+        for p in tmps:
+            print count,'\t',p[0],'\t',p[1]
+            count -= 1
+        print -1,'\t',self.depthSells[-1][0],'\t',self.depthSells[-1][1]
+        outstr = '输入要下单的深度成交价编号\n>=1时,价格为深度编号\n0:价格为略高于买一价\n-1:'
+        inputstr = raw_input("请输入：");
+        print inputstr
+        inputidx = int(inputstr)
+        tmps = tmps[::-1]
+        if inputidx != None:
+            if inputidx == 0:
+                v = self.depthBuys[-1] 
+                tmpprice = v[0] - 0.001
+                print '平空使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
+                if not self.isTest:
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'4','0','10')
+            elif inputidx < 0:
+                v = self.depthSells[-1] 
+                tmpprice = v[0] + 0.001
+                print '平空使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
+                if not self.isTest:
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'4','0','10')
+            elif inputidx > 0:
+                v = tmps[inputidx - 1]
+                tmpprice = v[0]
+                print '平空使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
+                if not self.isTest:
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'4','0','10')
+        else:
+            print '输入数据错误'
+
+    def openLong(self):
+        print ('期货开多单')
+        self.depthBuys,self.depthSells = self.getDepth()
+        atmp = list(self.depthSells)
+        self.depthSells = self.depthBuys
+        self.depthBuys = atmp
+        tmps = self.depthBuys
+        count = len(tmps)
+        for p in tmps:
+            print count,'\t',p[0],'\t',p[1]
+            count -= 1
+        print -1,'\t',self.depthSells[-1][0],'\t',self.depthSells[-1][1]
+        outstr = '输入要下单的深度成交价编号\n>=1时,价格为深度编号\n0:价格为略高于买一价\n-1:'
+        inputstr = raw_input("请输入：");
+        print inputstr
+        inputidx = int(inputstr)
+        tmps = tmps[::-1]
+        if inputidx != None:
+            if inputidx == 0:
+                v = self.depthBuys[-1] 
+                tmpprice = v[0] - 0.001
+                print '开多使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
+                if not self.isTest:
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'1','0','10')
+            elif inputidx < 0:
+                v = self.depthSells[-1] 
+                tmpprice = v[0] + 0.001
+                print '开多使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
+                if not self.isTest:
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'1','0','10')
+            elif inputidx > 0:
+                v = tmps[inputidx - 1]
+                tmpprice = v[0]
+                print '开多使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
+                if not self.isTest:
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'1','0','10')
+        else:
+            print '输入数据错误'
+        
+
+    def closeLong(self):
+        print ('期货平多单')
+        # symbol String 是 btc_usd   ltc_usd    eth_usd    etc_usd    bch_usd
+        # contract_type String 是 合约类型: this_week:当周   next_week:下周   quarter:季度
+        # api_key String 是 用户申请的apiKey 
+        # sign String 是 请求参数的签名
+        # price String 是 价格
+        # amount String 是 委托数量
+        # type String 是 1:开多   2:开空   3:平多   4:平空
+        # match_price String 否 是否为对手价 0:不是    1:是   ,当取值为1时,price无效
+        # lever_rate String 否
+        # 杠杆倍数 value:10\20 默认10
+        self.depthBuys,self.depthSells = self.getDepth()
+        tmps = self.depthBuys
+        count = len(tmps)
+        for p in tmps:
+            print count,'\t',p[0],'\t',p[1]
+            count -= 1
+
+        print -1,'\t',self.depthSells[-1][0],'\t',self.depthSells[-1][1]
+        outstr = '输入要下单的深度成交价编号\n>=1时,价格为深度编号\n0:价格为略高于买一价\n-1:'
+        inputstr = raw_input("请输入：");
+        print inputstr
+        inputidx = int(inputstr)
+        tmps = tmps[::-1]
+        if inputidx != None:
+            if inputidx == 0:
+                v = self.depthBuys[-1] 
+                tmpprice = v[0] + 0.001
+                print '平多使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
+                if not self.isTest:
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'3','0','10')
+            elif inputidx < 0:
+                v = self.depthSells[-1] 
+                tmpprice = v[0] - 0.001
+                print '平多使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
+                if not self.isTest:
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'3','0','10')
+            elif inputidx > 0:
+                v = tmps[inputidx - 1]
+                tmpprice = v[0]
+                print '平多使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
+                if not self.isTest:
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'3','0','10')
+        else:
+            print '输入数据错误'
+# print ('期货下单')
+# print (okcoinFuture.future_trade('ltc_usd','quarter','147.205','30','1','0','10'))
 
 #print (u'期货批量下单')
 #print (okcoinFuture.future_batchTrade('ltc_usd','this_week','[{price:0.1,amount:1,type:1,match_price:0},{price:0.1,amount:3,type:1,match_price:0}]','20'))
@@ -93,9 +297,9 @@ okcoinFuture = OKCoinFuture(okcoinRESTURL,apikey,secretkey)
 #print (okcoinFuture.future_cancel('ltc_usd','this_week','47231499'))
 
 #print (u'期货获取订单信息')
-jsonstr =  (okcoinFuture.future_orderinfo('ltc_usd','quarter','-1','2','1','30'))
+# jsonstr =  (okcoinFuture.future_orderinfo('ltc_usd','quarter','-1','2','1','30'))
 
-print jsonstr
+# print jsonstr
 
 # outsrt = json.dumps(jsonstr)
 
@@ -107,6 +311,46 @@ print jsonstr
 #print (u'期货逐仓持仓信息')
 #print (okcoinFuture.future_position_4fix('ltc_usd','this_week',1))
 
+def main(pAmount = 30, ispTest = False):
+     tradetool = TradeTool(amount = pAmount,isTest = ispTest)
+     pstr = 'os:开空\ncs:平空\nol:开多\ncl:平多\nset:设置每次成交量\ntest:\n\t输入1表示使用测试方式运行\n\t0表示正试运行下单\nq:退出\n请输入:'
+     while True:
+        inputstr = raw_input(pstr);
+        if inputstr == 'os':
+            tradetool.openShort()
+        elif inputstr == 'cs':
+            tradetool.closeShort()
+        elif inputstr == 'ol':
+            tradetool.openLong()
+        elif inputstr == 'cl':
+            tradetool.closeLong()
+        elif inputstr == 'set':
+            intmp = raw_input("输入每次开单量:");
+        elif inputstr == 'q':
+            print '程序退出成功'
+            break
+        elif inputstr == 'test':
+            tstr = raw_input(pstr);
+            if tstr == '1':
+                tradetool.isTest = True
+            elif tstr == '0':
+                tradetool.isTest = False
+            else:
+                print '输入参数错误'
+        else:
+            print '输入错误，%s'%(pstr)
 
-
+if __name__ == '__main__':
+    args = sys.argv
+    if len(args) == 1:
+        main()
+    elif len(args) == 2:
+        amount = int(args[1])
+        if amount:
+            main(pAmount = amount)
+        elif args[1] == 'test': 
+            print 'a程序使用测试方式运行\nmount未设置,使用默认值:30\n可在程序中重新设置\n，'
+            main(ispTest = False)
+    else:
+        print '程序只接受一个参数,test或者下单数量'
    
