@@ -115,13 +115,15 @@ class TradeTool(object):
 
     def getAllOrderIDs(self):
         #future_orderinfo(self,symbol,contractType,orderId,status,currentPage,pageLength)
-        tmpjson = self.okcoinFuture.future_orderinfo('ltc_usd','quarter','-1','1','1','30')
-        dic = json.loads(tmpjson)
-        self.IDs = []
         try:
+            tmpjson = self.okcoinFuture.future_orderinfo('ltc_usd','quarter','-1','1','1','30')
+            dic = json.loads(tmpjson)
+            self.IDs = []
             for t in dic['orders']:
                 self.IDs.append(t['order_id'])
         except Exception as e:
+            print '请求合约信息出错:'
+            print e
             self.IDs = []
         
 
