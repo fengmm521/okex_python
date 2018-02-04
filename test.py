@@ -5,7 +5,9 @@
 
 
 if __name__ == '__main__':
-    a = ['a','b','c']
-    x = ','.join(a)
+    # a = ['a','b','c']
+    # x = ','.join(a)
+    a = ' 345 abc  jjj   '
+    x = ' '.join(a.split())
     print x
    

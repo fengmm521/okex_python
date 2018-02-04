@@ -126,7 +126,7 @@ class TradeTool(object):
         
 
     #1:开多   2:开空   3:平多   4:平空
-    def openShort(self):
+    def openShort(self,ptype):
 
 
 
@@ -139,8 +139,9 @@ class TradeTool(object):
 
         outstr = '输入要下单的深度成交价编号\n>=1时,价格为深度编号\n0:价格为略高于买一价\n-1:'
         print outstr
-        inputstr = raw_input("请输入：");
-        print inputstr
+        # inputstr = raw_input("请输入：");
+        # print inputstr
+        inputstr = ptype
         try:
             inputidx = int(inputstr)
         except Exception as e:
@@ -191,7 +192,7 @@ class TradeTool(object):
         else:
             print '输入数据错误'
 
-    def closeShort(self):
+    def closeShort(self,ptype):
         # symbol String 是 btc_usd   ltc_usd    eth_usd    etc_usd    bch_usd
         # contract_type String 是 合约类型: this_week:当周   next_week:下周   quarter:季度
         # api_key String 是 用户申请的apiKey 
@@ -205,7 +206,8 @@ class TradeTool(object):
 
         outstr = '输入要下单的深度成交价编号\n>=1时,价格为深度编号\n0:价格为略高于买一价\n-1:'
         print outstr
-        inputstr = raw_input("请输入：");
+        # inputstr = raw_input("请输入：");
+        inputstr = ptype
         print inputstr
         try:
             inputidx = int(inputstr)
@@ -249,7 +251,7 @@ class TradeTool(object):
         else:
             print '输入数据错误'
 
-    def openLong(self):
+    def openLong(self,ptype):
         if self.isOpen:
             instr = raw_input('已开发仓是否继续开%d个空仓(y/n):'%(self.amount))
             print instr
@@ -258,7 +260,8 @@ class TradeTool(object):
                 return
         outstr = '输入要下单的深度成交价编号\n>=1时,价格为深度编号\n0:价格为略高于买一价\n-1:'
         print outstr
-        inputstr = raw_input("请输入：");
+        # inputstr = raw_input("请输入：");
+        inputstr = ptype
         print inputstr
         try:
             inputidx = int(inputstr)
@@ -305,11 +308,12 @@ class TradeTool(object):
             print '输入数据错误'
         
 
-    def closeLong(self):
+    def closeLong(self,ptype):
 
         outstr = '输入要下单的深度成交价编号\n>=1时,价格为深度编号\n0:价格为略高于买一价\n-1:'
         print outstr
-        inputstr = raw_input("请输入：");
+        # inputstr = raw_input("请输入：");
+        inputstr = ptype
         print inputstr
         try:
             inputidx = int(inputstr)
@@ -404,21 +408,38 @@ def main(pAmount = 30, ispTest = True):
      pstr = '程序重新运行,\nos:开空\ncs:平空\nol:开多\ncl:平多\np:输出设置项\nset:设置每次成交量\nc:取消所有未成交定单\ntest:\n\t输入1表示使用测试方式运行\n\t0表示正试运行下单\nq:退出\n请输入:'
      while True:
         inputstr = raw_input(pstr);
+        inputstr = inputstr.replace('\t','')
+        inputstr = inputstr.replace('\n','')
+        inputstr = ' '.join(inputstr.split())
+        inputstrs = inputstr.split(' ')
+        inputstr = inputstrs[0]
         if inputstr == 'os':
-            tradetool.openShort()
+            if len(inputstrs) == 2:
+                tradetool.openShort(inputstrs[1])
+            else:
+                tradetool.openShort('-1')
         elif inputstr == 'cs':
-            tradetool.closeShort()
+            if len(inputstrs) == 2:
+                tradetool.closeShort(inputstrs[1])
+            else:
+                tradetool.closeShort('-1')
         elif inputstr == 'ol':
-            tradetool.openLong()
+            if len(inputstrs) == 2:
+                tradetool.openLong(inputstrs[1])
+            else:
+                tradetool.openLong('-1')
         elif inputstr == 'cl':
-            tradetool.closeLong()
-        elif inputstr == 'set':
-            intmp = raw_input("输入每次开单量:");
+            if len(inputstrs) == 2:
+                tradetool.closeLong(inputstrs[1])
+            else:
+                tradetool.closeLong('-1')
+        elif inputstr == 'set' and len(inputstrs) == 2:
             try:
-                intam = int(intmp)
+                intam = int(inputstrs[1])
                 tradetool.amount = intam
+                print '开仓量改为:%d'%(intam)
             except Exception as e:
-                print '输入参数错误'
+                print '输入参数错误,请输入要设置的下单数量,(set 下单数量)'
         elif inputstr == 'q':
             print '程序退出成功'
             break
@@ -427,14 +448,18 @@ def main(pAmount = 30, ispTest = True):
         elif inputstr == 'p':
             tradetool.printSet()
         elif inputstr == 'test':
-            outstr = '输入是否开启测试\n1.开启测试下单不会真正发送\n0.关闭测试模试,下单将会发送到平台\n请输入:'
-            tstr = raw_input(outstr);
-            if tstr == '1':
-                tradetool.isTest = True
-            elif tstr == '0':
-                tradetool.isTest = False
+            if len(inputstrs) == 2:
+                if inputstrs[1] == '1':
+                    tradetool.isTest = True
+                    print '开启下单测试,isTest = ',tradetool.isTest
+                elif inputstrs[1] == '0':
+                    tradetool.isTest = False
+                    print '关闭下单测试,isTest = ',tradetool.isTest
+                else:
+                    print '输入参数错误'
             else:
-                print '输入参数错误'
+                tradetool.isTest = True
+                print '开启下单测试,isTest = ',tradetool.isTest
         else:
             print '输入错误，%s'%(pstr)
 
