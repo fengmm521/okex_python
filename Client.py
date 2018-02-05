@@ -230,7 +230,7 @@ class TradeTool(object):
                 if not self.isTest:
                     print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(tmpamount),'2','0','10')
             if tmpprice > 0:
-                cmd = 'say 开空,%.3f,%d张'%(sprice,tmpamount)
+                cmd = 'say 开空,%.3f,%d张'%(tmpprice,tmpamount)
                 os.system(cmd)
         else:
             print '输入数据错误'
@@ -498,7 +498,7 @@ class TradeTool(object):
                 tmps = tmps[::-1]
                 v = tmps[inputidx - 1]
                 tmpprice = v[0]
-                print '平多使用买一价下单:%.3f,amount:%d'%(tmpamount)
+                print '平多使用买一价下单:%.3f,amount:%d'%(tmpprice,tmpamount)
                 if not self.isTest:
                     print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(tmpamount),'3','0','10')
             if tmpprice > 0:
