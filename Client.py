@@ -85,7 +85,10 @@ okcoinRESTURL = 'www.okex.com'#'www.okcoin.com'   #请求注意：国内账号�
 
 #print (u'获取全仓持仓信息')
 #print (okcoinFuture.future_position('ltc_usd','this_week'))
-
+def sayMsg(msg):
+    cmd = 'say %s'%(msg)
+    os.system(cmd)
+    print msg
 
 
 class TradeTool(object):
@@ -129,7 +132,7 @@ class TradeTool(object):
         
 
     #1:开多   2:开空   3:平多   4:平空
-    def openShort(self,ptype):
+    def openShort(self,ptype,pprice = None,pamount = None):
 
 
 
@@ -139,6 +142,38 @@ class TradeTool(object):
             if instr != 'y':
                 print '已开仓，选择本次不开仓'
                 return
+
+        print ('期货开空单')
+
+        tmpamount = self.amount
+
+        if pprice and pamount:
+            try:
+                print '开空使用买一价下单:%.3f,amount:%d'%(float(pprice),int(pamount))
+                if not self.isTest:
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(pprice),str(pamount),'2','0','10')
+                cmd = 'say 开空,%.3f,%d张'%(float(pprice),int(pamount))
+                os.system(cmd)
+            except Exception as e:
+                cmd = 'say 参数错误'
+                os.system(cmd)
+                print '参数错误'
+            return
+        elif pprice and not(pamount):
+            try:
+                print '开空使用买一价下单:%.3f,amount:%d'%(float(pprice),int(self.amount))
+                if not self.isTest:
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(pprice),str(self.amount),'2','0','10')
+                cmd = 'say 开空,%.3f,%d张'%(float(pprice),int(self.amount))
+                os.system(cmd)
+            except Exception as e:
+                cmd = 'say 参数错误'
+                os.system(cmd)
+                print '参数错误'
+            return
+        elif (not pprice) and pamount:
+            tmpamount = int(pamount)
+            
 
         outstr = '输入要下单的深度成交价编号\n>=1时,价格为深度编号\n0:价格为略高于买一价\n-1:'
         print outstr
@@ -151,7 +186,7 @@ class TradeTool(object):
             inputidx = None
         print inputidx,type(inputidx)
 
-        print ('期货开空单')
+        
         # symbol String 是 btc_usd   ltc_usd    eth_usd    etc_usd    bch_usd
         # contract_type String 是 合约类型: this_week:当周   next_week:下周   quarter:季度
         # api_key String 是 用户申请的apiKey 
@@ -178,29 +213,29 @@ class TradeTool(object):
             if inputidx == 0:
                 v = self.depthBuys[0]
                 tmpprice = v[0] + 0.001
-                print '开空使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
+                print '开空使用买一价下单:%.3f,amount:%d'%(tmpprice,tmpamount)
                 if not self.isTest:
-                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'2','0','10')
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(tmpamount),'2','0','10')
             elif inputidx < 0:
                 v = self.depthSells[-1] 
                 tmpprice = v[0] - 0.001
-                print '开空使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
+                print '开空使用买一价下单:%.3f,amount:%d'%(tmpprice,tmpamount)
                 if not self.isTest:
-                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'2','0','10')
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(tmpamount),'2','0','10')
             elif inputidx > 0:
                 tmps = tmps[::-1]
                 v = tmps[inputidx - 1]
                 tmpprice = v[0]
-                print '开空使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
+                print '开空使用买一价下单:%.3f,amount:%d'%(tmpprice,tmpamount)
                 if not self.isTest:
-                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'2','0','10')
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(tmpamount),'2','0','10')
             if tmpprice > 0:
-                cmd = 'say 开空,%.3f,%d张'%(sprice,self.amount)
+                cmd = 'say 开空,%.3f,%d张'%(sprice,tmpamount)
                 os.system(cmd)
         else:
             print '输入数据错误'
 
-    def closeShort(self,ptype):
+    def closeShort(self,ptype,pprice = None,pamount = None):
         # symbol String 是 btc_usd   ltc_usd    eth_usd    etc_usd    bch_usd
         # contract_type String 是 合约类型: this_week:当周   next_week:下周   quarter:季度
         # api_key String 是 用户申请的apiKey 
@@ -211,6 +246,33 @@ class TradeTool(object):
         # match_price String 否 是否为对手价 0:不是    1:是   ,当取值为1时,price无效
         # lever_rate String 否
         # 杠杆倍数 value:10\20 默认10
+        tmpamount = self.amount
+        if pprice and pamount:
+            try:
+                print '平空使用买一价下单:%.3f,amount:%d'%(float(pprice),int(pamount))
+                if not self.isTest:
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(pprice),str(pamount),'4','0','10')
+                cmd = 'say 平空,%.3f,%d张'%(float(pprice),int(pamount))
+                os.system(cmd)
+            except Exception as e:
+                cmd = 'say 参数错误'
+                os.system(cmd)
+                print '参数错误'
+            return
+        elif pprice and not(pamount):
+            try:
+                print '平空使用买一价下单:%.3f,amount:%d'%(float(pprice),int(self.amount))
+                if not self.isTest:
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(pprice),str(self.amount),'4','0','10')
+                cmd = 'say 平空,%.3f,%d张'%(float(pprice),int(self.amount))
+                os.system(cmd)
+            except Exception as e:
+                cmd = 'say 参数错误'
+                os.system(cmd)
+                print '参数错误'
+            return
+        elif (not pprice) and pamount:
+            tmpamount = int(pamount)
 
         outstr = '输入要下单的深度成交价编号\n>=1时,价格为深度编号\n0:价格为略高于买一价\n-1:'
         print outstr
@@ -241,35 +303,63 @@ class TradeTool(object):
             if inputidx == 0:
                 v = self.depthBuys[-1] 
                 tmpprice = v[0] - 0.001
-                print '平空使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
+                print '平空使用买一价下单:%.3f,amount:%d'%(tmpprice,tmpamount)
                 if not self.isTest:
-                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'4','0','10')
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(tmpamount),'4','0','10')
             elif inputidx < 0:
                 v = self.depthSells[0] 
                 tmpprice = v[0] + 0.001
-                print '平空使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
+                print '平空使用买一价下单:%.3f,amount:%d'%(tmpprice,tmpamount)
                 if not self.isTest:
-                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'4','0','10')
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(tmpamount),'4','0','10')
             elif inputidx > 0:
                 tmps = tmps[::-1]
                 v = tmps[inputidx - 1]
                 tmpprice = v[0]
-                print '平空使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
+                print '平空使用买一价下单:%.3f,amount:%d'%(tmpprice,tmpamount)
                 if not self.isTest:
-                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'4','0','10')
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(tmpamount),'4','0','10')
             if tmpprice > 0:
-                cmd = 'say 平空,%.3f,%d张'%(tmpprice,self.amount)
+                cmd = 'say 平空,%.3f,%d张'%(tmpprice,tmpamount)
                 os.system(cmd)
         else:
             print '输入数据错误'
 
-    def openLong(self,ptype):
+    def openLong(self,ptype,pprice = None,pamount = None):
         if self.isOpen:
             instr = raw_input('已开发仓是否继续开%d个空仓(y/n):'%(self.amount))
             print instr
             if instr != 'y':
                 print '已开仓，选择本次不开仓'
                 return
+        tmpamount = self.amount
+        if pprice and pamount:
+            try:
+                print '开多使用买一价下单:%.3f,amount:%d'%(float(pprice),int(pamount))
+                if not self.isTest:
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(pprice),str(pamount),'1','0','10')
+                cmd = 'say 开多,%.3f,%d张'%(float(pprice),int(pamount))
+                os.system(cmd)
+            except Exception as e:
+                cmd = 'say 参数错误'
+                os.system(cmd)
+                print '参数错误'
+            return
+        elif pprice and not(pamount):
+            try:
+                print '开多使用买一价下单:%.3f,amount:%d'%(float(pprice),int(self.amount))
+                if not self.isTest:
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(pprice),str(self.amount),'1','0','10')
+                cmd = 'say 开多,%.3f,%d张'%(float(pprice),int(self.amount))
+                os.system(cmd)
+            except Exception as e:
+                cmd = 'say 参数错误'
+                os.system(cmd)
+                print '参数错误'
+            return
+        elif (not pprice) and pamount:
+            tmpamount = int(pamount)
+
         outstr = '输入要下单的深度成交价编号\n>=1时,价格为深度编号\n0:价格为略高于买一价\n-1:'
         print outstr
         # inputstr = raw_input("请输入：");
@@ -301,30 +391,59 @@ class TradeTool(object):
             if inputidx == 0:
                 v = self.depthBuys[-1] 
                 tmpprice = v[0] - 0.001
-                print '开多使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
+                print '开多使用买一价下单:%.3f,amount:%d'%(tmpprice,tmpamount)
                 if not self.isTest:
-                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'1','0','10')
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(tmpamount),'1','0','10')
             elif inputidx < 0:
                 v = self.depthSells[0] 
                 tmpprice = v[0] + 0.001
-                print '开多使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
+                print '开多使用买一价下单:%.3f,amount:%d'%(tmpprice,tmpamount)
                 if not self.isTest:
-                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'1','0','10')
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(tmpamount),'1','0','10')
             elif inputidx > 0:
                 tmps = tmps[::-1]
                 v = tmps[inputidx - 1]
                 tmpprice = v[0]
-                print '开多使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
+                print '开多使用买一价下单:%.3f,amount:%d'%(tmpprice,tmpamount)
                 if not self.isTest:
-                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'1','0','10')
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(tmpamount),'1','0','10')
             if tmpprice > 0:
-                cmd = 'say 开多,%.3f,%d张'%(tmpprice,self.amount)
+                cmd = 'say 开多,%.3f,%d张'%(tmpprice,tmpamount)
                 os.system(cmd)
         else:
             print '输入数据错误'
         
 
-    def closeLong(self,ptype):
+    def closeLong(self,ptype,pprice = None,pamount = None):
+
+        print ('期货平多单')
+        tmpamount = self.amount
+        if pprice and pamount:
+            try:
+                print '平多使用买一价下单:%.3f,amount:%d'%(float(pprice),int(pamount))
+                if not self.isTest:
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(pprice),str(pamount),'3','0','10')
+                cmd = 'say 平多,%.3f,%d张'%(float(pprice),int(pamount))
+                os.system(cmd)
+            except Exception as e:
+                cmd = 'say 参数错误'
+                os.system(cmd)
+                print '参数错误'
+            return
+        elif pprice and not(pamount):
+            try:
+                print '平多使用买一价下单:%.3f,amount:%d'%(float(pprice),int(self.amount))
+                if not self.isTest:
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(pprice),str(self.amount),'3','0','10')
+                cmd = 'say 平多,%.3f,%d张'%(float(pprice),int(self.amount))
+                os.system(cmd)
+            except Exception as e:
+                cmd = 'say 参数错误'
+                os.system(cmd)
+                print '参数错误'
+            return
+        elif (not pprice) and pamount:
+            tmpamount = int(pamount)
 
         outstr = '输入要下单的深度成交价编号\n>=1时,价格为深度编号\n0:价格为略高于买一价\n-1:'
         print outstr
@@ -336,7 +455,7 @@ class TradeTool(object):
         except Exception as e:
             inputidx = None
 
-        print ('期货平多单')
+        
         # symbol String 是 btc_usd   ltc_usd    eth_usd    etc_usd    bch_usd
         # contract_type String 是 合约类型: this_week:当周   next_week:下周   quarter:季度
         # api_key String 是 用户申请的apiKey 
@@ -366,24 +485,24 @@ class TradeTool(object):
             if inputidx == 0:
                 v = self.depthBuys[0]
                 tmpprice = v[0] + 0.001
-                print '平多使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
+                print '平多使用买一价下单:%.3f,amount:%d'%(tmpprice,tmpamount)
                 if not self.isTest:
-                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'3','0','10')
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(tmpamount),'3','0','10')
             elif inputidx < 0:
                 v = self.depthSells[-1] 
                 tmpprice = v[0] - 0.001
-                print '平多使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
+                print '平多使用买一价下单:%.3f,amount:%d'%(tmpprice,tmpamount)
                 if not self.isTest:
-                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'3','0','10')
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(tmpamount),'3','0','10')
             elif inputidx > 0:
                 tmps = tmps[::-1]
                 v = tmps[inputidx - 1]
                 tmpprice = v[0]
-                print '平多使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
+                print '平多使用买一价下单:%.3f,amount:%d'%(tmpamount)
                 if not self.isTest:
-                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'3','0','10')
+                    print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(tmpamount),'3','0','10')
             if tmpprice > 0:
-                cmd = 'say 平多,%.3f,%d张'%(tmpprice,self.amount)
+                cmd = 'say 平多,%.3f,%d张'%(tmpprice,tmpamount)
                 os.system(cmd)
         else:
             print '输入数据错误'
@@ -436,21 +555,97 @@ def main(pAmount = 30, ispTest = True):
         if inputstr == 'os':
             if len(inputstrs) == 2:
                 tradetool.openShort(inputstrs[1])
+            elif len(inputstrs) == 3:
+                if inputstrs[1] == '-p':
+                    tradetool.openShort(-1,inputstrs[2])
+                elif inputstrs[1] == '-a':
+                    tradetool.openShort(-1,None,inputstrs[2])
+                else:
+                    sayMsg('输入参数错误')
+            elif len(inputstrs) == 4:
+                if inputstrs[2] == '-a':
+                    tradetool.openShort(inputstrs[1],None,inputstrs[3])
+                else:
+                    sayMsg('输入参数错误')
+            elif len(inputstrs) == 5:
+                if inputstrs[1] == '-p' and inputstrs[3] == '-a':
+                    tradetool.openShort(-1,inputstrs[2],inputstrs[4])
+                elif inputstrs[1] == '-a' and inputstrs[3] == '-p':
+                    tradetool.openShort(-1,inputstrs[4],inputstrs[2])
+                else:
+                    sayMsg('输入参数错误')
             else:
                 tradetool.openShort('-1')
         elif inputstr == 'cs':
             if len(inputstrs) == 2:
                 tradetool.closeShort(inputstrs[1])
+            elif len(inputstrs) == 3:
+                if inputstrs[1] == '-p':
+                    tradetool.closeShort(-1,inputstrs[2])
+                elif inputstrs[1] == '-a':
+                    tradetool.closeShort(-1,None,inputstrs[2])
+                else:
+                    sayMsg('输入参数错误')
+            elif len(inputstrs) == 4:
+                if inputstrs[2] == '-a':
+                    tradetool.closeShort(inputstrs[1],None,inputstrs[3])
+                else:
+                    sayMsg('输入参数错误')
+            elif len(inputstrs) == 5:
+                if inputstrs[1] == '-p' and inputstrs[3] == '-a':
+                    tradetool.closeShort(-1,inputstrs[2],inputstrs[4])
+                elif inputstrs[1] == '-a' and inputstrs[3] == '-p':
+                    tradetool.closeShort(-1,inputstrs[4],inputstrs[2])
+                else:
+                    sayMsg('输入参数错误')
             else:
                 tradetool.closeShort('-1')
         elif inputstr == 'ol':
             if len(inputstrs) == 2:
                 tradetool.openLong(inputstrs[1])
+            elif len(inputstrs) == 3:
+                if inputstrs[1] == '-p':
+                    tradetool.openLong(-1,inputstrs[2])
+                elif inputstrs[1] == '-a':
+                    tradetool.openLong(-1,None,inputstrs[2])
+                else:
+                    sayMsg('输入参数错误')
+            elif len(inputstrs) == 4:
+                if inputstrs[2] == '-a':
+                    tradetool.openLong(inputstrs[1],None,inputstrs[3])
+                else:
+                    sayMsg('输入参数错误')
+            elif len(inputstrs) == 5:
+                if inputstrs[1] == '-p' and inputstrs[3] == '-a':
+                    tradetool.openLong(-1,inputstrs[2],inputstrs[4])
+                elif inputstrs[1] == '-a' and inputstrs[3] == '-p':
+                    tradetool.openLong(-1,inputstrs[4],inputstrs[2])
+                else:
+                    sayMsg('输入参数错误')
             else:
                 tradetool.openLong('-1')
         elif inputstr == 'cl':
             if len(inputstrs) == 2:
                 tradetool.closeLong(inputstrs[1])
+            elif len(inputstrs) == 3:
+                if inputstrs[1] == '-p':
+                    tradetool.closeLong(-1,inputstrs[2])
+                elif inputstrs[1] == '-a':
+                    tradetool.closeLong(-1,None,inputstrs[2])
+                else:
+                    sayMsg('输入参数错误')
+            elif len(inputstrs) == 4:
+                if inputstrs[2] == '-a':
+                    tradetool.closeLong(inputstrs[1],None,inputstrs[3])
+                else:
+                    sayMsg('输入参数错误')
+            elif len(inputstrs) == 5:
+                if inputstrs[1] == '-p' and inputstrs[3] == '-a':
+                    tradetool.closeLong(-1,inputstrs[2],inputstrs[4])
+                elif inputstrs[1] == '-a' and inputstrs[3] == '-p':
+                    tradetool.closeLong(-1,inputstrs[4],inputstrs[2])
+                else:
+                    sayMsg('输入参数错误')
             else:
                 tradetool.closeLong('-1')
         elif inputstr == 'set' and len(inputstrs) == 2:
@@ -476,6 +671,7 @@ def main(pAmount = 30, ispTest = True):
                     tradetool.isTest = False
                     print '关闭下单测试,isTest = ',tradetool.isTest
                 else:
+                    sayMsg('输入参数错误')
                     print '输入参数错误'
             else:
                 tradetool.isTest = True
