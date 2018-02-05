@@ -8,6 +8,7 @@ from OkcoinFutureAPI import OKCoinFuture
 from magetool import urltool
 import json
 import sys
+import os
 import time
 
 f = open('../../btc/okexapikey/okexapikey.txt','r')
@@ -172,6 +173,8 @@ class TradeTool(object):
             print -1,'\t',self.depthSells[-1][0],'\t',self.depthSells[-1][1]
 
             self.isOpen = True
+
+            tmpprice = 0.0
             if inputidx == 0:
                 v = self.depthBuys[0]
                 tmpprice = v[0] + 0.001
@@ -191,6 +194,9 @@ class TradeTool(object):
                 print '开空使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
                 if not self.isTest:
                     print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'2','0','10')
+            if tmpprice > 0:
+                cmd = 'say 开空,%.3f,%d张'%(sprice,self.amount)
+                os.system(cmd)
         else:
             print '输入数据错误'
 
@@ -231,6 +237,7 @@ class TradeTool(object):
             print -1,'\t',self.depthSells[0][0],'\t',self.depthSells[0][1]
 
             self.isOpen = False
+            tmpprice = 0.0
             if inputidx == 0:
                 v = self.depthBuys[-1] 
                 tmpprice = v[0] - 0.001
@@ -250,6 +257,9 @@ class TradeTool(object):
                 print '平空使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
                 if not self.isTest:
                     print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'4','0','10')
+            if tmpprice > 0:
+                cmd = 'say 平空,%.3f,%d张'%(tmpprice,self.amount)
+                os.system(cmd)
         else:
             print '输入数据错误'
 
@@ -287,6 +297,7 @@ class TradeTool(object):
             print -1,'\t',self.depthSells[0][0],'\t',self.depthSells[0][1]
 
             self.isOpen = True
+            tmpprice = 0.0
             if inputidx == 0:
                 v = self.depthBuys[-1] 
                 tmpprice = v[0] - 0.001
@@ -306,6 +317,9 @@ class TradeTool(object):
                 print '开多使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
                 if not self.isTest:
                     print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'1','0','10')
+            if tmpprice > 0:
+                cmd = 'say 开多,%.3f,%d张'%(tmpprice,self.amount)
+                os.system(cmd)
         else:
             print '输入数据错误'
         
@@ -348,6 +362,7 @@ class TradeTool(object):
             print -1,'\t',self.depthSells[-1][0],'\t',self.depthSells[-1][1]
 
             self.isOpen = False
+            tmpprice = 0.0
             if inputidx == 0:
                 v = self.depthBuys[0]
                 tmpprice = v[0] + 0.001
@@ -367,6 +382,9 @@ class TradeTool(object):
                 print '平多使用买一价下单:%.3f,amount:%d'%(tmpprice,self.amount)
                 if not self.isTest:
                     print self.okcoinFuture.future_trade('ltc_usd','quarter',str(tmpprice),str(self.amount),'3','0','10')
+            if tmpprice > 0:
+                cmd = 'say 平多,%.3f,%d张'%(tmpprice,self.amount)
+                os.system(cmd)
         else:
             print '输入数据错误'
 
