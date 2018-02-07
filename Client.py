@@ -513,7 +513,10 @@ class TradeTool(object):
         if self.IDs:
             strids = self.IDs[0]
             if len(self.IDs) > 1:
-                strids = ','.join(self.IDs)
+                idstmp = []
+                for i in self.IDs:
+                    idstmp.append(str(i))
+                strids = ','.join(idstmp)
             print self.okcoinFuture.future_cancel('ltc_usd','quarter',strids)
             print '所有定单已取消'
         self.isOpen = False
